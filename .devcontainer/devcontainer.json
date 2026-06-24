@@ -1,0 +1,113 @@
+{
+  "name": "Agent Dev Environment",
+
+  // Use the existing docker-compose setup
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "agent-dev",
+  "workspaceFolder": "/workspace",
+
+  // VS Code extensions to auto-install in the container
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Python
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.mypy-type-checker",
+        "charliermarsh.ruff",
+        "ms-python.debugpy",
+
+        // Jupyter
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+
+        // Docker & containers
+        "ms-azuretools.vscode-docker",
+
+        // Database
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+
+        // Git
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+
+        // General productivity
+        "gruntfuggly.todo-tree",
+        "usernamehw.errorlens",
+        "streetsidesoftware.code-spell-checker",
+        "yzhang.markdown-all-in-one",
+        "pkief.material-icon-theme",
+        "zhuangtongfa.material-theme",
+
+        // REST client (test APIs without leaving VS Code)
+        "humao.rest-client",
+
+        // Env file support
+        "mikestead.dotenv"
+      ],
+
+      "settings": {
+        // Python interpreter points to the container's Python
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.terminal.activateEnvironment": true,
+
+        // Formatting
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+          }
+        },
+
+        // Linting
+        "ruff.lint.enable": true,
+        "mypy-type-checker.enabled": true,
+
+        // Editor UX
+        "editor.fontSize": 14,
+        "editor.lineHeight": 1.6,
+        "editor.rulers": [88],
+        "editor.bracketPairColorization.enabled": true,
+        "editor.guides.bracketPairs": true,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+
+        // Terminal
+        "terminal.integrated.defaultProfile.linux": "bash",
+
+        // SQLTools — auto-connects to the postgres service
+        "sqltools.connections": [
+          {
+            "name": "agent-postgres",
+            "driver": "PostgreSQL",
+            "server": "postgres",
+            "port": 5432,
+            "database": "agentdb",
+            "username": "agentdev",
+            "password": "agentdev"
+          }
+        ]
+      }
+    }
+  },
+
+  // Forward ports from container to Windows host
+  "forwardPorts": [8000, 7860, 8080, 8888, 5432],
+  "portsAttributes": {
+    "8000": { "label": "FastAPI",   "onAutoForward": "notify" },
+    "7860": { "label": "Gradio",    "onAutoForward": "notify" },
+    "8080": { "label": "Streamlit", "onAutoForward": "silent" },
+    "8888": { "label": "Jupyter",   "onAutoForward": "silent" },
+    "5432": { "label": "Postgres",  "onAutoForward": "silent" }
+  },
+
+  // Post-create: install deps if requirements.txt is present in workspace
+  "postCreateCommand": "pip install --quiet -r /workspace/requirements.txt 2>/dev/null || true",
+
+  // Run as the non-root user defined in Dockerfile
+  "remoteUser": "agentdev"
+}
